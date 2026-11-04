@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a2a30">
+<meta name="description" content="Задание 3. Алгоритм шифрования RSA: генерация ключей, шифрование и расшифрование">
+<meta property="og:title" content="Задание 3 · Контрольная работа · Теория информации">
+<meta property="og:description" content="Алгоритм шифрования RSA">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Задание 3 · Контрольная работа</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark bg-t3">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Задание 3. Алгоритм шифрования RSA</h1>
+    <p class="variant">Вариант 3</p>
+  </div>
+
+  <div class="card">
+    <div class="proto">
+      <div class="party">Алиса<small>получатель, хранит закрытый ключ</small></div>
+      <div class="arrows">
+        <div class="arrow right">открытый ключ (<i>e</i>, <i>n</i>)</div>
+        <div class="arrow left">шифртекст <i>c</i></div>
+      </div>
+      <div class="party">Боб<small>отправитель</small></div>
+    </div>
+    <details class="theory">
+      <summary>Кратко об алгоритме</summary>
+      <ol>
+        <li>Выбираются два различных простых числа <i>p</i> и <i>q</i>.</li>
+        <li>Вычисляются модуль <i>n</i> = <i>p</i>·<i>q</i> и функция Эйлера φ(<i>n</i>) = (<i>p</i>−1)(<i>q</i>−1).</li>
+        <li>Выбирается открытая экспонента <i>e</i>: 1 &lt; <i>e</i> &lt; φ(<i>n</i>), НОД(<i>e</i>, φ(<i>n</i>)) = 1.</li>
+        <li>Расширенным алгоритмом Евклида находится закрытая экспонента
+          <i>d</i> = <i>e</i><sup>−1</sup> mod φ(<i>n</i>), то есть <i>e</i>·<i>d</i> ≡ 1 (mod φ(<i>n</i>)).</li>
+        <li>Открытый ключ (<i>e</i>, <i>n</i>) передаётся отправителю, закрытый ключ (<i>d</i>, <i>n</i>) остаётся у получателя.</li>
+        <li>Шифрование: <i>c</i> = <i>m</i><sup><i>e</i></sup> mod <i>n</i>.
+          Расшифрование: <i>m</i> = <i>c</i><sup><i>d</i></sup> mod <i>n</i>.</li>
+      </ol>
+      <p>Здесь каждый символ сообщения заменяется своим кодом Unicode <i>m</i> и шифруется отдельно,
+        поэтому должно выполняться <i>m</i> &lt; <i>n</i>.</p>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="who alice">Алиса</span> Шаг 1. Генерация ключей</h2>
+    <div class="form-grid">
+      <label>Простое число <i>p</i>
+        <input id="r-p" type="text" inputmode="numeric" autocomplete="off" value="61"></label>
+      <label>Простое число <i>q</i>
+        <input id="r-q" type="text" inputmode="numeric" autocomplete="off" value="53"></label>
+      <label>Открытая экспонента <i>e</i>
+        <input id="r-e" type="text" inputmode="numeric" autocomplete="off" value="17" placeholder="авто"></label>
+    </div>
+    <div class="btn-row">
+      <button type="button" id="r-keys" data-sound="result" class="primary">Вычислить ключи</button>
+      <button type="button" id="r-random" data-sound="result">Случайные p и q</button>
+    </div>
+    <div id="r-keys-out" class="result"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="who bob">Боб</span> Шаг 2. Шифрование открытым ключом</h2>
+    <label>Сообщение
+      <textarea id="r-msg" rows="3">Привет, RSA!</textarea></label>
+    <div class="btn-row"><button type="button" id="r-enc" data-sound="result" class="primary">Зашифровать</button></div>
+    <div id="r-enc-out"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="who alice">Алиса</span> Шаг 3. Расшифрование закрытым ключом</h2>
+    <label>Шифртекст (числа через пробел)
+      <textarea id="r-cipher" class="mono" rows="3"></textarea></label>
+    <div class="btn-row"><button type="button" id="r-dec" data-sound="result" class="primary">Расшифровать</button></div>
+    <div id="r-dec-out"></div>
+  </div>
+
+  <nav class="pager">
+    <a href="task2.html">← Задание 2</a>
+    <a href="index.html">На главную</a>
+    <span></span>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script src="js/rsa.js"></script>
+<script>
+  (() => {
+    const keysOut = $('r-keys-out');
+    const encOut = $('r-enc-out');
+    const decOut = $('r-dec-out');
+    const errorBox = (err) => `<p class="error">${esc(err.message)}</p>`;
+
+    function readNumber(id, name, optional) {
+      const value = $(id).value.replace(/\s+/g, '');
+      if (!value && optional) return null;
+      if (!/^\d+$/.test(value)) throw new Error(`${name}: введите целое положительное число`);
+      if (value.length > 24) throw new Error(`${name}: слишком большое число (не более 24 цифр)`);
+      return BigInt(value);
+    }
+
+    /** Ключи по текущим значениям полей; результат или ошибка сразу выводятся на страницу. */
+    function showKeys() {
+      try {
+        const k = RSA.generateKeys(readNumber('r-p', 'p'), readNumber('r-q', 'q'), readNumber('r-e', 'e', true));
+        keysOut.innerHTML = `
+          <ol class="calc">
+            <li><i>n</i> = <i>p</i> · <i>q</i> = ${k.p} · ${k.q} = <b>${k.n}</b></li>
+            <li>φ(<i>n</i>) = (<i>p</i> − 1)(<i>q</i> − 1) = ${k.p - 1n} · ${k.q - 1n} = <b>${k.phi}</b></li>
+            <li><i>e</i> = <b>${k.e}</b>: 1 &lt; <i>e</i> &lt; φ(<i>n</i>), НОД(${k.e}, ${k.phi}) = 1${k.auto ? ' <span class="muted">(выбрано автоматически)</span>' : ''}</li>
+            <li><i>d</i> = <i>e</i><sup>−1</sup> mod φ(<i>n</i>) = <b>${k.d}</b>;
+              проверка: ${k.e} · ${k.d} mod ${k.phi} = ${(k.e * k.d) % k.phi}</li>
+          </ol>
+          <div class="keys">
+            <div class="key pub"><span>Открытый ключ (у Боба)</span><code>(e, n) = (${k.e}, ${k.n})</code></div>
+            <div class="key priv"><span>Закрытый ключ (только у Алисы)</span><code>(d, n) = (${k.d}, ${k.n})</code></div>
+          </div>`;
+        return k;
+      } catch (err) {
+        keysOut.innerHTML = errorBox(err);
+        return null;
+      }
+    }
+
+    function table(head, rows) {
+      return `<details class="table-details"><summary>Подробно по символам</summary>
+        <div class="table-wrap"><table>
+          <thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows.join('')}</tbody>
+        </table></div></details>`;
+    }
+
+    function encryptMessage() {
+      const k = showKeys();
+      if (!k) return;
+      try {
+        const rows = RSA.encrypt($('r-msg').value, k.e, k.n);
+        if (!rows.length) throw new Error('Введите сообщение');
+        const cipher = rows.map((r) => r.c).join(' ');
+        $('r-cipher').value = cipher;
+        decOut.innerHTML = '';
+        encOut.innerHTML = `
+          <p class="out-label">Шифртекст c = m<sup>${k.e}</sup> mod ${k.n}:</p>
+          <div class="out-box mono">${cipher}</div>
+          ${table(['Символ', 'm (код)', 'c = m<sup>e</sup> mod n'], rows.map((r) =>
+            `<tr><td class="sym">«${esc(visible(r.ch))}»</td><td class="num">${r.m}</td><td class="big">${r.c}</td></tr>`))}`;
+      } catch (err) {
+        encOut.innerHTML = errorBox(err);
+      }
+    }
+
+    function decryptMessage() {
+      const k = showKeys();
+      if (!k) return;
+      try {
+        const numbers = RSA.parseNumbers($('r-cipher').value);
+        if (!numbers.length) throw new Error('Введите шифртекст или сначала зашифруйте сообщение');
+        const rows = RSA.decrypt(numbers, k.d, k.n);
+        const text = rows.map((r) => r.ch).join('');
+        decOut.innerHTML = `
+          <p class="out-label">Расшифрованное сообщение m = c<sup>${k.d}</sup> mod ${k.n}:</p>
+          <div class="out-box">${esc(text)}</div>
+          ${table(['c', 'm = c<sup>d</sup> mod n', 'Символ'], rows.map((r) =>
+            `<tr><td class="big">${r.c}</td><td class="num">${r.m}</td><td class="sym">«${esc(visible(r.ch))}»</td></tr>`))}`;
+      } catch (err) {
+        decOut.innerHTML = errorBox(err);
+      }
+    }
+
+    function resetMessages() {
+      encOut.innerHTML = '';
+      decOut.innerHTML = '';
+      $('r-cipher').value = '';
+    }
+
+    $('r-keys').addEventListener('click', () => {
+      showKeys();
+      resetMessages();
+    });
+    $('r-random').addEventListener('click', () => {
+      const p = RSA.randomPrime(1009, 9973);
+      let q;
+      do q = RSA.randomPrime(1009, 9973); while (q === p);
+      $('r-p').value = p;
+      $('r-q').value = q;
+      $('r-e').value = '';
+      showKeys();
+      resetMessages();
+    });
+    $('r-enc').addEventListener('click', encryptMessage);
+    $('r-dec').addEventListener('click', decryptMessage);
+
+    showKeys();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>

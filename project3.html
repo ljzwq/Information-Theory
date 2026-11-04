@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c9d8e8">
+<meta name="description" content="Проект 3. Код Хэмминга (7, 4): кодирование, поиск и исправление одиночной ошибки">
+<meta property="og:title" content="Проект 3 · Теория информации">
+<meta property="og:description" content="Код Хэмминга (7, 4)">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Проект 3 · Теория информации</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .venn circle { stroke-width: 2.5; }
+  .venn circle.fail { stroke: #c62828; stroke-width: 5; stroke-dasharray: 10 6; }
+  .venn text { font: italic 15px "Times New Roman", Times, serif; fill: currentColor; text-anchor: middle; }
+</style>
+</head>
+<body class="light bg-p3">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Проект 3. Код Хэмминга (7, 4)</h1>
+    <p class="variant">Четыре бита сообщения, три проверочных бита, исправление одной ошибки</p>
+  </div>
+
+  <div class="card">
+    <h2>Три круга</h2>
+    <p>Биты сообщения <i>m</i><sub>1</sub>…<i>m</i><sub>4</sub> стоят на пересечениях кругов, проверочные биты
+      <i>r</i><sub>1</sub>…<i>r</i><sub>3</sub> — каждый в своём круге. В каждом круге сумма битов должна быть чётной.
+      Если в одном бите ошибка, «не сходятся» именно те круги, в которые он входит.</p>
+
+    <div class="venn">
+      <svg viewBox="0 0 400 340" aria-hidden="true">
+        <circle id="c1" cx="200" cy="125" r="95" fill="rgba(76,175,80,.18)" stroke="#43a047"/>
+        <circle id="c2" cx="145" cy="220" r="95" fill="rgba(44,91,214,.15)" stroke="#2c5bd6"/>
+        <circle id="c3" cx="255" cy="220" r="95" fill="rgba(233,30,99,.13)" stroke="#d81b60"/>
+        <text x="200" y="42">r1</text>
+        <text x="150" y="187">m1</text>
+        <text x="250" y="187">m2</text>
+        <text x="200" y="227">m4</text>
+        <text x="110" y="299">r2</text>
+        <text x="200" y="299">m3</text>
+        <text x="290" y="299">r3</text>
+      </svg>
+      <input id="h-r1" class="bit parity" style="left: 50%; top: 20.6%;" maxlength="1" inputmode="numeric" autocomplete="off" aria-label="Проверочный бит r1">
+      <input id="h-m1" class="bit" style="left: 37.5%; top: 44.1%;" maxlength="1" inputmode="numeric" autocomplete="off" value="0" aria-label="Бит сообщения m1">
+      <input id="h-m2" class="bit" style="left: 62.5%; top: 44.1%;" maxlength="1" inputmode="numeric" autocomplete="off" value="1" aria-label="Бит сообщения m2">
+      <input id="h-m4" class="bit" style="left: 50%; top: 55.9%;" maxlength="1" inputmode="numeric" autocomplete="off" value="1" aria-label="Бит сообщения m4">
+      <input id="h-r2" class="bit parity" style="left: 27.5%; top: 77.1%;" maxlength="1" inputmode="numeric" autocomplete="off" aria-label="Проверочный бит r2">
+      <input id="h-m3" class="bit" style="left: 50%; top: 77.1%;" maxlength="1" inputmode="numeric" autocomplete="off" value="1" aria-label="Бит сообщения m3">
+      <input id="h-r3" class="bit parity" style="left: 72.5%; top: 77.1%;" maxlength="1" inputmode="numeric" autocomplete="off" aria-label="Проверочный бит r3">
+    </div>
+    <div class="legend">
+      <span><i style="background:#43a047"></i>r1 = m1 ⊕ m2 ⊕ m4</span>
+      <span><i style="background:#2c5bd6"></i>r2 = m1 ⊕ m3 ⊕ m4</span>
+      <span><i style="background:#d81b60"></i>r3 = m2 ⊕ m3 ⊕ m4</span>
+    </div>
+
+    <div class="btn-row center">
+      <button type="button" id="h-encode" data-sound="result" class="primary">Вычислить r1, r2, r3</button>
+      <button type="button" id="h-test" data-sound="result" class="primary">Проверить</button>
+      <button type="button" id="h-noise">Внести ошибку</button>
+      <button type="button" id="h-clear">Очистить</button>
+    </div>
+    <div id="h-out" aria-live="polite"></div>
+  </div>
+
+  <div class="card">
+    <h2>По формулам из лекции</h2>
+    <p>Кодовое слово <i>u</i> = (<i>u</i><sub>1</sub>…<i>u</i><sub>7</sub>) = (<i>r</i><sub>1</sub>, <i>r</i><sub>2</sub>,
+      <i>m</i><sub>1</sub>, <i>r</i><sub>3</sub>, <i>m</i><sub>2</sub>, <i>m</i><sub>3</sub>, <i>m</i><sub>4</sub>):
+      проверочные биты стоят на местах 1, 2 и 4 (степени двойки). Синдром принятого слова — двоичный номер разряда с ошибкой.</p>
+    <div class="form-grid">
+      <label>Сообщение <i>m</i>, 4 бита
+        <input id="f-m" class="mono" type="text" inputmode="numeric" autocomplete="off" maxlength="4" value="0111"></label>
+      <label>Принятое слово <i>y</i>, 7 битов
+        <input id="f-y" class="mono" type="text" inputmode="numeric" autocomplete="off" maxlength="7" value="0011111"></label>
+    </div>
+    <div class="cols">
+      <div><h3>Кодирование</h3><div id="f-enc"></div></div>
+      <div><h3>Декодирование</h3><div id="f-dec"></div></div>
+    </div>
+  </div>
+
+  <nav class="pager">
+    <a href="project2.html">← Проект 2</a>
+    <a href="index.html">На главную</a>
+    <a href="project4.html">Проект 4 →</a>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script>
+  (() => {
+    /** Порядок битов в кодовом слове: u1 … u7. */
+    const ORDER = ['r1', 'r2', 'm1', 'r3', 'm2', 'm3', 'm4'];
+    const DEFAULT = { m1: '0', m2: '1', m3: '1', m4: '1' };
+    const out = $('h-out');
+    const box = (name) => $('h-' + name);
+
+    /** Кодовое слово по 4 битам сообщения. */
+    function encode([m1, m2, m3, m4]) {
+      return [m1 ^ m2 ^ m4, m1 ^ m3 ^ m4, m1, m2 ^ m3 ^ m4, m2, m3, m4];
+    }
+
+    /** Синдром (s1 s2 s3) и номер разряда с ошибкой (0 — ошибки нет). */
+    function syndrome(u) {
+      const s = [u[3] ^ u[4] ^ u[5] ^ u[6], u[1] ^ u[2] ^ u[5] ^ u[6], u[0] ^ u[2] ^ u[4] ^ u[6]];
+      return { s, pos: s[0] * 4 + s[1] * 2 + s[2] };
+    }
+
+    const sub = (name) => `${name[0]}<sub>${name[1]}</sub>`;
+
+    // ---------- Круги ----------
+
+    function readVenn() {
+      let ok = true;
+      const values = {};
+      for (const name of ORDER) {
+        const v = box(name).value;
+        box(name).classList.remove('fixed');
+        box(name).classList.toggle('bad', v !== '0' && v !== '1');
+        if (v !== '0' && v !== '1') ok = false;
+        values[name] = Number(v);
+      }
+      return ok ? values : null;
+    }
+
+    function markCircles(s) {
+      // s1 — круг r3, s2 — круг r2, s3 — круг r1
+      $('c3').classList.toggle('fail', s[0] === 1);
+      $('c2').classList.toggle('fail', s[1] === 1);
+      $('c1').classList.toggle('fail', s[2] === 1);
+    }
+
+    function test() {
+      const values = readVenn();
+      if (!values) {
+        markCircles([0, 0, 0]);
+        out.innerHTML = '<p class="error">Заполните все клетки нулями и единицами (r1, r2, r3 можно вычислить кнопкой).</p>';
+        return;
+      }
+      const u = ORDER.map((name) => values[name]);
+      const { s, pos } = syndrome(u);
+      markCircles(s);
+      const head = `<p class="center">Кодовое слово <i>u</i> = <b class="mono">${u.join('')}</b>,
+        синдром <i>S</i> = (${s.join(' ')}) = ${pos}</p>`;
+      if (pos === 0) {
+        out.innerHTML = `${head}<p class="big-result center">Ошибок нет. Сообщение <i>m</i> = <b class="mono">${values.m1}${values.m2}${values.m3}${values.m4}</b></p>`;
+        return;
+      }
+      const name = ORDER[pos - 1];
+      box(name).classList.add('bad');
+      out.innerHTML = `${head}<p class="error center"><b>Ошибка в бите ${sub(name)}</b> (разряд <i>u</i><sub>${pos}</sub>):
+        не сходятся круги, в которые он входит.</p>
+        <div class="btn-row center"><button type="button" class="primary" data-fix="${name}" data-sound="result">Исправить ${name}</button></div>`;
+    }
+
+    out.addEventListener('click', (e) => {
+      const name = e.target.dataset.fix;
+      if (!name) return;
+      box(name).value = box(name).value === '1' ? '0' : '1';
+      test();
+      box(name).classList.add('fixed');
+    });
+
+    $('h-encode').addEventListener('click', () => {
+      const m = ['m1', 'm2', 'm3', 'm4'];
+      m.forEach((name) => box(name).classList.toggle('bad', !/^[01]$/.test(box(name).value)));
+      if (m.some((name) => box(name).classList.contains('bad'))) {
+        out.innerHTML = '<p class="error">Биты сообщения m1…m4 должны быть 0 или 1.</p>';
+        return;
+      }
+      const u = encode(m.map((name) => Number(box(name).value)));
+      ORDER.forEach((name, i) => (box(name).value = u[i]));
+      test();
+    });
+
+    $('h-test').addEventListener('click', test);
+
+    $('h-noise').addEventListener('click', () => {
+      if (!readVenn()) {
+        test();
+        return;
+      }
+      const name = ORDER[Math.floor(Math.random() * ORDER.length)];
+      box(name).value = box(name).value === '1' ? '0' : '1';
+      markCircles([0, 0, 0]);
+      out.innerHTML = '<p class="muted center">Один случайный бит изменён. Нажмите «Проверить».</p>';
+    });
+
+    $('h-clear').addEventListener('click', () => {
+      for (const name of ORDER) {
+        box(name).value = DEFAULT[name] || '';
+        box(name).classList.remove('bad', 'fixed');
+      }
+      markCircles([0, 0, 0]);
+      out.innerHTML = '';
+    });
+
+    for (const name of ORDER) {
+      box(name).addEventListener('input', () => {
+        box(name).value = box(name).value.slice(-1);
+        box(name).classList.remove('bad', 'fixed');
+      });
+      box(name).addEventListener('focus', () => box(name).select());
+    }
+
+    // ---------- Формулы ----------
+
+    const readBits = (id, n) => {
+      const v = $(id).value.replace(/\s+/g, '');
+      return new RegExp(`^[01]{${n}}$`).test(v) ? [...v].map(Number) : null;
+    };
+
+    function formulas() {
+      const m = readBits('f-m', 4);
+      if (!m) {
+        $('f-enc').innerHTML = '<p class="error">Введите ровно 4 бита (0 и 1).</p>';
+      } else {
+        const u = encode(m);
+        $('f-enc').innerHTML = `<ol class="calc">
+          <li>r<sub>1</sub> = m<sub>1</sub>+m<sub>2</sub>+m<sub>4</sub> = ${m[0]}+${m[1]}+${m[3]} = <b>${u[0]}</b></li>
+          <li>r<sub>2</sub> = m<sub>1</sub>+m<sub>3</sub>+m<sub>4</sub> = ${m[0]}+${m[2]}+${m[3]} = <b>${u[1]}</b></li>
+          <li>r<sub>3</sub> = m<sub>2</sub>+m<sub>3</sub>+m<sub>4</sub> = ${m[1]}+${m[2]}+${m[3]} = <b>${u[3]}</b></li>
+        </ol>
+        <p class="big-result">u = <b class="mono">${u.join('')}</b></p>`;
+      }
+
+      const y = readBits('f-y', 7);
+      if (!y) {
+        $('f-dec').innerHTML = '<p class="error">Введите ровно 7 битов (0 и 1).</p>';
+        return;
+      }
+      const { s, pos } = syndrome(y);
+      const fixed = y.slice();
+      if (pos) fixed[pos - 1] ^= 1;
+      const message = [fixed[2], fixed[4], fixed[5], fixed[6]].join('');
+      $('f-dec').innerHTML = `<ol class="calc">
+          <li>S<sub>1</sub> = u<sub>4</sub>+u<sub>5</sub>+u<sub>6</sub>+u<sub>7</sub> = <b>${s[0]}</b></li>
+          <li>S<sub>2</sub> = u<sub>2</sub>+u<sub>3</sub>+u<sub>6</sub>+u<sub>7</sub> = <b>${s[1]}</b></li>
+          <li>S<sub>3</sub> = u<sub>1</sub>+u<sub>3</sub>+u<sub>5</sub>+u<sub>7</sub> = <b>${s[2]}</b></li>
+          <li>S = (${s.join(' ')}) = ${pos}<sub>10</sub> — ${pos ? `ошибка в разряде ${pos}: ${y.join('')} → ${fixed.join('')}` : 'ошибок нет'}</li>
+        </ol>
+        <p class="big-result">m = <b class="mono">${message}</b></p>`;
+    }
+
+    $('f-m').addEventListener('input', formulas);
+    $('f-y').addEventListener('input', formulas);
+    formulas();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>

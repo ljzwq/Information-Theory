@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d8d6d4">
+<meta name="description" content="Проект 5. Генератор WOW/BOW: случайный источник с вероятностями W 50 %, O 37,5 %, B 12,5 %">
+<meta property="og:title" content="Проект 5 · Теория информации">
+<meta property="og:description" content="Генератор WOW/BOW">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Проект 5 · Теория информации</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light bg-p5">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Проект 5. Генератор WOW/BOW</h1>
+    <p class="variant">Дискретный источник без памяти: буквы W, O, B с заданными вероятностями</p>
+  </div>
+
+  <div class="card">
+    <h2>Источник</h2>
+    <p>Каждая следующая буква выбирается случайно и не зависит от предыдущих:</p>
+    <div class="formula"><i>p</i>(W) = 50 %, &nbsp; <i>p</i>(O) = 37,5 %, &nbsp; <i>p</i>(B) = 12,5 %</div>
+    <p class="muted small">Энтропия источника <i>H</i> = 0,5·log<sub>2</sub> 2 + 0,375·log<sub>2</sub>(1/0,375) + 0,125·log<sub>2</sub> 8 ≈ 1,4056 бит на букву.
+      Вероятность, что с данного места начнётся «WOW», — 0,5·0,375·0,5 = 0,09375, а «BOW» — 0,125·0,375·0,5 ≈ 0,0234.</p>
+  </div>
+
+  <div class="card">
+    <h2>Генерация</h2>
+    <div class="btn-row center">
+      <button type="button" id="w-one" data-sound="result" class="primary">Сгенерировать букву</button>
+      <button type="button" id="w-ten" data-sound="result">+10</button>
+      <button type="button" id="w-hundred" data-sound="result">+100</button>
+      <button type="button" id="w-clear">Удалить</button>
+    </div>
+    <div id="w-word" class="word-out" aria-live="polite"></div>
+    <div id="w-stats"></div>
+  </div>
+
+  <nav class="pager">
+    <a href="project4.html">← Проект 4</a>
+    <a href="index.html">На главную</a>
+    <a href="project6.html">Проект 6 →</a>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script>
+  (() => {
+    const SOURCE = [['W', 0.5], ['O', 0.375], ['B', 0.125]];
+    const WORDS = ['WOW', 'BOW'];
+    const LIMIT = 3000;
+    const f4 = (x) => fmt(round(x, 4));
+    let word = '';
+
+    function nextLetter() {
+      let r = Math.random();
+      for (const [ch, p] of SOURCE) {
+        if (r < p) return ch;
+        r -= p;
+      }
+      return SOURCE[SOURCE.length - 1][0];
+    }
+
+    /** Все вхождения образца, в том числе перекрывающиеся (WOWOW — два раза WOW). */
+    function positions(pattern) {
+      const found = [];
+      for (let i = word.indexOf(pattern); i !== -1; i = word.indexOf(pattern, i + 1)) found.push(i);
+      return found;
+    }
+
+    function render() {
+      const marked = new Array(word.length).fill(false);
+      const counts = {};
+      for (const pattern of WORDS) {
+        const found = positions(pattern);
+        counts[pattern] = found.length;
+        for (const i of found) for (let j = 0; j < pattern.length; j++) marked[i + j] = true;
+      }
+      let html = '';
+      for (let i = 0; i < word.length; i++) {
+        if (marked[i] && !marked[i - 1]) html += '<mark>';
+        html += word[i];
+        if (marked[i] && !marked[i + 1]) html += '</mark>';
+      }
+      $('w-word').innerHTML = html || '<span class="muted small">Нажмите «Сгенерировать букву»</span>';
+
+      const n = word.length;
+      let h = 0;
+      const rows = SOURCE.map(([ch, p]) => {
+        const k = [...word].filter((c) => c === ch).length;
+        const q = n ? k / n : 0;
+        if (q > 0) h -= q * Math.log2(q);
+        return `<tr><td><b>${ch}</b></td><td class="num">${fmt(p * 100)} %</td><td class="num">${k}</td><td class="num">${fmt(round(q * 100, 1))} %</td></tr>`;
+      });
+      const expected = (p) => fmt(round(Math.max(n - 2, 0) * p, 1));
+      $('w-stats').innerHTML = `
+        <p class="out-label">Букв: ${n}${n >= LIMIT ? ' (больше не добавляется)' : ''}</p>
+        <div class="table-wrap plain"><table>
+          <thead><tr><th>Буква</th><th class="num">Задано</th><th class="num">Выпало, раз</th><th class="num">Получилось</th></tr></thead>
+          <tbody>${rows.join('')}</tbody>
+        </table></div>
+        <div class="kv">
+          <span>Сколько раз встретилось WOW</span><b>${counts.WOW} (в среднем ожидается ${expected(0.09375)})</b>
+          <span>Сколько раз встретилось BOW</span><b>${counts.BOW} (в среднем ожидается ${expected(0.0234375)})</b>
+          <span>Энтропия по частотам</span><b>${f4(h)} бит/букву (у источника 1,4056)</b>
+        </div>`;
+    }
+
+    function generate(count) {
+      for (let i = 0; i < count && word.length < LIMIT; i++) word += nextLetter();
+      render();
+    }
+
+    $('w-one').addEventListener('click', () => generate(1));
+    $('w-ten').addEventListener('click', () => generate(10));
+    $('w-hundred').addEventListener('click', () => generate(100));
+    $('w-clear').addEventListener('click', () => {
+      word = '';
+      render();
+    });
+
+    render();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>

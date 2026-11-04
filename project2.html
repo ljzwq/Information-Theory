@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121512">
+<meta name="description" content="Проект 2. Булева логика: побитовые AND, OR, XOR и бит чётности">
+<meta property="og:title" content="Проект 2 · Теория информации">
+<meta property="og:description" content="Булева логика: AND, OR, XOR и бит чётности">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Проект 2 · Теория информации</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark bg-p2">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Проект 2. Булева логика</h1>
+    <p class="variant">Побитовые операции AND, OR, XOR и бит чётности</p>
+  </div>
+
+  <div class="card">
+    <h2>Логические операции над числами</h2>
+    <p>Числа переводятся в двоичную запись, и операция выполняется над каждой парой разрядов.</p>
+    <div class="inline-form">
+      <input id="l-a" type="text" inputmode="numeric" autocomplete="off" value="22" aria-label="Первое число A">
+      <input id="l-b" type="text" inputmode="numeric" autocomplete="off" value="26" aria-label="Второе число B">
+      <button type="button" id="l-calc" data-sound="result" class="primary">=</button>
+    </div>
+    <div id="l-out" aria-live="polite"></div>
+    <details class="theory">
+      <summary>Таблица истинности</summary>
+      <div class="table-wrap plain">
+        <table>
+          <thead><tr><th>a</th><th>b</th><th>a AND b</th><th>a OR b</th><th>a XOR b</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted small">Пример из лекции 4: 10110 XOR 11010 = 01100, то есть 22 XOR 26 = 12.</p>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Бит чётности</h2>
+    <p>Введите семь битов. Бит чётности — сумма битов по модулю 2: 0, если единиц чётное число, и 1, если нечётное.</p>
+    <div class="bits" id="p-bits">
+      <input class="bit" maxlength="1" inputmode="numeric" autocomplete="off" value="1" aria-label="Бит 1">
+      <input class="bit" maxlength="1" inputmode="numeric" autocomplete="off" value="0" aria-label="Бит 2">
+      <input class="bit" maxlength="1" inputmode="numeric" autocomplete="off" value="1" aria-label="Бит 3">
+      <input class="bit" maxlength="1" inputmode="numeric" autocomplete="off" value="1" aria-label="Бит 4">
+      <input class="bit" maxlength="1" inputmode="numeric" autocomplete="off" value="0" aria-label="Бит 5">
+      <input class="bit" maxlength="1" inputmode="numeric" autocomplete="off" value="0" aria-label="Бит 6">
+      <input class="bit" maxlength="1" inputmode="numeric" autocomplete="off" value="1" aria-label="Бит 7">
+    </div>
+    <div class="btn-row center">
+      <button type="button" id="p-calc" data-sound="result" class="primary">Чётность</button>
+      <button type="button" id="p-random" data-sound="result">Случайные биты</button>
+    </div>
+    <div id="p-out" aria-live="polite"></div>
+  </div>
+
+  <nav class="pager">
+    <a href="project1.html">← Проект 1</a>
+    <a href="index.html">На главную</a>
+    <a href="project3.html">Проект 3 →</a>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script>
+  (() => {
+    const logicOut = $('l-out');
+    const parityOut = $('p-out');
+    const bits = [...document.querySelectorAll('#p-bits .bit')];
+
+    function readNumber(id, name) {
+      const value = $(id).value.replace(/\s+/g, '');
+      if (!/^\d+$/.test(value)) throw new Error(`${name}: введите целое неотрицательное число`);
+      if (value.length > 18) throw new Error(`${name}: не больше 18 цифр`);
+      return BigInt(value);
+    }
+
+    function logic() {
+      try {
+        const a = readNumber('l-a', 'A');
+        const b = readNumber('l-b', 'B');
+        const rows = [['A', a], ['B', b], ['A AND B', a & b], ['A OR B', a | b], ['A XOR B', a ^ b]];
+        const width = Math.max(a.toString(2).length, b.toString(2).length);
+        logicOut.innerHTML = `<div class="table-wrap plain"><table>
+          <thead><tr><th></th><th>Двоичная запись</th><th class="num">Десятичная</th></tr></thead>
+          <tbody>${rows.map(([name, x], i) => `<tr${i === 2 ? ' class="sep"' : ''}>
+            <th>${name}</th><td class="big">${x.toString(2).padStart(width, '0')}</td><td class="num"><b>${x}</b></td></tr>`).join('')}
+          </tbody></table></div>`;
+      } catch (err) {
+        logicOut.innerHTML = `<p class="error">${esc(err.message)}</p>`;
+      }
+    }
+
+    function parity() {
+      bits.forEach((box) => box.classList.toggle('bad', box.value !== '0' && box.value !== '1'));
+      if (bits.some((box) => box.classList.contains('bad'))) {
+        parityOut.innerHTML = '<p class="error">В каждой клетке должен быть 0 или 1.</p>';
+        return;
+      }
+      const values = bits.map((box) => Number(box.value));
+      const ones = values.reduce((sum, x) => sum + x, 0);
+      const p = ones % 2;
+      parityOut.innerHTML = `<p class="big-result center">${values.join(' ⊕ ')} = <b>${p}</b></p>
+        <p class="muted small center">Единиц: ${ones} — ${p ? 'нечётное' : 'чётное'} число, ${ones} mod 2 = ${p}.
+          С битом чётности в слове ${values.join('')}${p} будет чётное число единиц.</p>`;
+    }
+
+    bits.forEach((box, i) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.slice(-1);
+        if (/^[01]$/.test(box.value) && bits[i + 1]) bits[i + 1].focus();
+        parity();
+      });
+      box.addEventListener('focus', () => box.select());
+    });
+
+    $('l-calc').addEventListener('click', logic);
+    $('l-a').addEventListener('input', logic);
+    $('l-b').addEventListener('input', logic);
+    $('p-calc').addEventListener('click', parity);
+    $('p-random').addEventListener('click', () => {
+      bits.forEach((box) => (box.value = Math.random() < 0.5 ? '0' : '1'));
+      parity();
+    });
+
+    logic();
+    parity();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>

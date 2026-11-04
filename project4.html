@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1512">
+<meta name="description" content="Проект 4. Количество информации по Хартли H = K·LB(N) и энтропия Шеннона">
+<meta property="og:title" content="Проект 4 · Теория информации">
+<meta property="og:description" content="LB(N) и энтропия Шеннона">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Проект 4 · Теория информации</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark bg-p4">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Проект 4. LB(N) и энтропия Шеннона</h1>
+    <p class="variant">Мера Хартли и мера Шеннона</p>
+  </div>
+
+  <div class="card">
+    <h2>Двоичный логарифм: мера Хартли</h2>
+    <div class="formula"><i>H</i> = <i>K</i> · LB(<i>N</i>), &nbsp; LB(<i>N</i>) = log<sub>2</sub> <i>N</i></div>
+    <p class="muted small"><i>N</i> — число равновероятных символов алфавита, <i>K</i> — число символов в сообщении.
+      Например, телетайп: 32 символа, LB(32) = 5 бит на символ.</p>
+    <div class="form-grid">
+      <label>Число символов в алфавите, <i>N</i>
+        <input id="h-n" type="text" inputmode="decimal" autocomplete="off" value="32"></label>
+      <label>Длина сообщения, <i>K</i>
+        <input id="h-k" type="text" inputmode="decimal" autocomplete="off" value="1"></label>
+    </div>
+    <div id="h-out" aria-live="polite"></div>
+  </div>
+
+  <div class="card">
+    <h2>Энтропия Шеннона</h2>
+    <div class="formula"><i>H</i> = −Σ <i>p<sub>i</sub></i> · log<sub>2</sub> <i>p<sub>i</sub></i> = Σ <i>p<sub>i</sub></i> · log<sub>2</sub> (1/<i>p<sub>i</sub></i>)</div>
+    <p class="muted small">Вероятности символов — в процентах, в сумме 100. Пример из лекции 3: A, B, C, D с вероятностями
+      1/2, 1/4, 1/8, 1/8 дают <i>H</i> = 7/4 бита на символ.</p>
+    <div class="prob-list" id="sh-list"></div>
+    <div class="btn-row center">
+      <button type="button" id="sh-add">+ символ</button>
+      <button type="button" id="sh-remove">− символ</button>
+      <button type="button" id="sh-equal">Поровну</button>
+    </div>
+    <div id="sh-out" aria-live="polite"></div>
+  </div>
+
+  <nav class="pager">
+    <a href="project3.html">← Проект 3</a>
+    <a href="index.html">На главную</a>
+    <a href="project5.html">Проект 5 →</a>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script>
+  (() => {
+    const f4 = (x) => fmt(round(x, 4));
+
+    // ---------- Хартли ----------
+
+    function hartley() {
+      const n = parseDecimal($('h-n').value);
+      const k = parseDecimal($('h-k').value);
+      const out = $('h-out');
+      if (!(n > 0) || !Number.isFinite(n)) {
+        out.innerHTML = '<p class="error"><i>N</i> должно быть больше 0.</p>';
+        return;
+      }
+      if (!(k >= 0) || !Number.isFinite(k)) {
+        out.innerHTML = '<p class="error"><i>K</i> должно быть неотрицательным числом.</p>';
+        return;
+      }
+      const lb = Math.log2(n);
+      out.innerHTML = `<p class="big-result">LB(${fmt(n)}) = <b>${f4(lb)}</b> бит;
+        &nbsp; <i>H</i> = ${fmt(k)} · ${f4(lb)} = <b>${f4(k * lb)}</b> бит</p>`;
+    }
+    $('h-n').addEventListener('input', hartley);
+    $('h-k').addEventListener('input', hartley);
+    hartley();
+
+    // ---------- Шеннон ----------
+
+    const list = $('sh-list');
+    const MIN = 2;
+    const MAX = 10;
+    const letter = (i) => String.fromCharCode(65 + i);
+
+    function addField(value) {
+      const i = list.children.length;
+      const label = document.createElement('label');
+      label.innerHTML = `p(${letter(i)}), %<input type="text" inputmode="decimal" autocomplete="off">`;
+      label.querySelector('input').value = value;
+      label.querySelector('input').addEventListener('input', shannon);
+      list.append(label);
+    }
+
+    function shannon() {
+      const out = $('sh-out');
+      const inputs = [...list.querySelectorAll('input')];
+      const percents = inputs.map((input) => parseDecimal(input.value));
+      inputs.forEach((input, i) => input.classList.toggle('bad', !(percents[i] >= 0)));
+      if (percents.some((x) => !(x >= 0) || !Number.isFinite(x))) {
+        out.innerHTML = '<p class="error">Введите проценты — числа от 0 и больше.</p>';
+        return;
+      }
+      const total = percents.reduce((s, x) => s + x, 0);
+      if (Math.abs(total - 100) > 0.01) {
+        out.innerHTML = `<p class="error">Сумма вероятностей должна быть 100 %, сейчас ${fmt(round(total, 4))} %.</p>`;
+        return;
+      }
+      let h = 0;
+      const rows = percents.map((percent, i) => {
+        const p = percent / 100;
+        const info = p > 0 ? Math.log2(1 / p) : 0;
+        h += p * info;
+        return `<tr><td>${letter(i)}</td><td class="num">${f4(p)}</td><td class="num">${p > 0 ? f4(info) : '—'}</td><td class="num">${f4(p * info)}</td></tr>`;
+      });
+      const hMax = Math.log2(percents.length);
+      out.innerHTML = `<div class="table-wrap plain"><table>
+          <thead><tr><th>Символ</th><th class="num">p<sub>i</sub></th><th class="num">log<sub>2</sub>(1/p<sub>i</sub>)</th><th class="num">p<sub>i</sub>·log<sub>2</sub>(1/p<sub>i</sub>)</th></tr></thead>
+          <tbody>${rows.join('')}</tbody>
+        </table></div>
+        <p class="big-result"><i>H</i> = <b>${f4(h)}</b> бит/символ</p>
+        <p class="muted small">Максимум для ${percents.length} символов: <i>H</i><sub>max</sub> = log<sub>2</sub> ${percents.length} = ${f4(hMax)} бит
+          (когда все символы равновероятны). Избыточность <i>R</i> = 1 − <i>H</i>/<i>H</i><sub>max</sub> = ${f4(1 - h / hMax)}.</p>`;
+    }
+
+    $('sh-add').addEventListener('click', () => {
+      if (list.children.length < MAX) addField('0');
+      shannon();
+    });
+    $('sh-remove').addEventListener('click', () => {
+      if (list.children.length > MIN) list.lastElementChild.remove();
+      shannon();
+    });
+    $('sh-equal').addEventListener('click', () => {
+      const inputs = [...list.querySelectorAll('input')];
+      inputs.forEach((input) => (input.value = fmt(round(100 / inputs.length, 4))));
+      // остаток от округления — в последний символ, чтобы сумма была ровно 100
+      const rest = 100 - round(100 / inputs.length, 4) * (inputs.length - 1);
+      inputs[inputs.length - 1].value = fmt(round(rest, 4));
+      shannon();
+    });
+
+    for (const p of ['50', '25', '12,5', '12,5']) addField(p);
+    shannon();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>

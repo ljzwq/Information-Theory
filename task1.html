@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#9fd0f0">
+<meta name="description" content="Задание 1. Энтропия: количество информации в телевизионном сообщении">
+<meta property="og:title" content="Задание 1 · Контрольная работа · Теория информации">
+<meta property="og:description" content="Количество информации в телевизионном сообщении длительностью 1 с">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Задание 1 · Контрольная работа</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light bg-t1">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Задание 1. Энтропия</h1>
+    <p class="variant">Вариант 1</p>
+  </div>
+
+  <div class="card">
+    <h2>Условие</h2>
+    <p>Определить количество информации, содержащееся в телевизионном сообщении, которое длится 1&nbsp;с.
+      Число элементов разложения в&nbsp;одной строке равно 600. Число строк равно 600. Число градаций яркости
+      равно 128. Число кадров в&nbsp;секунду равно 25.</p>
+  </div>
+
+  <div class="card">
+    <h2>Дано</h2>
+    <ul class="given">
+      <li><i>k</i> = 600 — число элементов разложения в строке;</li>
+      <li><i>s</i> = 600 — число строк в кадре;</li>
+      <li><i>m</i> = 128 — число градаций яркости;</li>
+      <li><i>f</i> = 25 кадров/с — частота кадров;</li>
+      <li><i>t</i> = 1 с — длительность сообщения.</li>
+    </ul>
+    <p>Найти: <i>I</i> — количество информации в сообщении.</p>
+  </div>
+
+  <div class="card">
+    <h2>Решение</h2>
+    <p>Телевизионное изображение состоит из отдельных элементов разложения. Считаем, что яркость каждого
+      элемента не зависит от других и с равной вероятностью принимает любое из <i>m</i> значений. Тогда
+      энтропия одного элемента максимальна и равна мере Хартли <i>H</i> = log<sub>2</sub>&nbsp;<i>m</i>.</p>
+    <ol class="steps">
+      <li>Число элементов в одном кадре:
+        <div class="formula"><i>N</i><sub>к</sub> = <i>k</i> · <i>s</i> = 600 · 600 = 360&nbsp;000.</div>
+      </li>
+      <li>За <i>t</i> = 1 с передаётся <i>f</i> · <i>t</i> = 25 кадров, поэтому всего элементов в сообщении:
+        <div class="formula"><i>N</i> = <i>N</i><sub>к</sub> · <i>f</i> · <i>t</i> = 360&nbsp;000 · 25 · 1 = 9&nbsp;000&nbsp;000.</div>
+      </li>
+      <li>Количество информации в одном элементе (энтропия при равновероятных градациях яркости):
+        <div class="formula"><i>H</i> = log<sub>2</sub> <i>m</i> = log<sub>2</sub> 128 = 7 бит.</div>
+      </li>
+      <li>Число всех возможных различных сообщений <i>M</i> = <i>m</i><sup><i>N</i></sup> = 128<sup>9&nbsp;000&nbsp;000</sup>,
+        поэтому количество информации в сообщении:
+        <div class="formula"><i>I</i> = log<sub>2</sub> <i>M</i> = <i>N</i> · log<sub>2</sub> <i>m</i> = 9&nbsp;000&nbsp;000 · 7 = 63&nbsp;000&nbsp;000 бит.</div>
+      </li>
+    </ol>
+    <p class="answer"><b>Ответ:</b> <i>I</i> = 6,3·10<sup>7</sup> бит = 63 Мбит
+      (7&nbsp;875&nbsp;000 байт ≈ 7,51 Мбайт).</p>
+  </div>
+
+  <div class="card">
+    <h2>Проверка расчёта</h2>
+    <p class="muted">Исходные данные можно изменить, результат пересчитывается сразу.</p>
+    <div class="form-grid">
+      <label>Элементов в строке, <i>k</i>
+        <input id="e-k" type="text" inputmode="decimal" autocomplete="off" value="600"></label>
+      <label>Строк в кадре, <i>s</i>
+        <input id="e-s" type="text" inputmode="decimal" autocomplete="off" value="600"></label>
+      <label>Градаций яркости, <i>m</i>
+        <input id="e-m" type="text" inputmode="decimal" autocomplete="off" value="128"></label>
+      <label>Кадров в секунду, <i>f</i>
+        <input id="e-f" type="text" inputmode="decimal" autocomplete="off" value="25"></label>
+      <label>Длительность, с, <i>t</i>
+        <input id="e-t" type="text" inputmode="decimal" autocomplete="off" value="1"></label>
+    </div>
+    <div id="e-result" class="result" aria-live="polite"></div>
+  </div>
+
+  <nav class="pager">
+    <a href="project6.html">← Проект 6</a>
+    <a href="index.html">На главную</a>
+    <a href="task2.html">Задание 2 →</a>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script>
+  (() => {
+    const FIELDS = ['k', 's', 'm', 'f', 't'];
+    const out = $('e-result');
+
+    /** I = k·s·f·t·log2 m — мера Хартли для N = k·s·f·t независимых равновероятных элементов. */
+    function calc({ k, s, m, f, t }) {
+      const perFrame = k * s;
+      const elements = perFrame * f * t;
+      const h = Math.log2(m);
+      const bits = elements * h;
+      return { perFrame, elements, h, bits, bytes: bits / 8, mebibytes: bits / 8 / 1024 / 1024 };
+    }
+
+    function update() {
+      const v = {};
+      for (const name of FIELDS) {
+        const x = parseDecimal($('e-' + name).value);
+        if (!(x > 0) || !Number.isFinite(x)) {
+          out.innerHTML = `<p class="error">Введите положительное число <i>${name}</i>.</p>`;
+          return;
+        }
+        v[name] = x;
+      }
+      if (v.m < 1) {
+        out.innerHTML = '<p class="error">Число градаций <i>m</i> должно быть не меньше 1.</p>';
+        return;
+      }
+      const r = calc(v);
+      out.innerHTML = `
+        <ol class="calc">
+          <li><i>N</i><sub>к</sub> = ${fmt(v.k)} · ${fmt(v.s)} = <b>${fmt(r.perFrame)}</b> — элементов в кадре</li>
+          <li><i>N</i> = ${fmt(r.perFrame)} · ${fmt(v.f)} · ${fmt(v.t)} = <b>${fmt(r.elements)}</b> — элементов в сообщении</li>
+          <li><i>H</i> = log<sub>2</sub> ${fmt(v.m)} = <b>${fmt(r.h)}</b> бит — на один элемент</li>
+          <li><i>I</i> = ${fmt(r.elements)} · ${fmt(r.h)} = <b>${fmt(r.bits)}</b> бит</li>
+        </ol>
+        <p class="answer"><b><i>I</i> = ${sci(r.bits)} бит</b> = ${fmt(r.bytes)} байт ≈ ${fmt(round(r.mebibytes, 2))} Мбайт</p>`;
+    }
+
+    for (const name of FIELDS) $('e-' + name).addEventListener('input', update);
+    update();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>

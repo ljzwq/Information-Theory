@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#9fb0b8">
+<meta name="description" content="Проект 1. Расчёт ABBA: число перестановок букв слова, гласные! × согласные!">
+<meta property="og:title" content="Проект 1 · Теория информации">
+<meta property="og:description" content="Расчёт ABBA: гласные! × согласные!">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Проект 1 · Теория информации</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light bg-p1">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Проект 1. Расчёт ABBA</h1>
+    <p class="variant">Перестановки букв: гласные! × согласные!</p>
+  </div>
+
+  <div class="card">
+    <h2>Формула</h2>
+    <p>Сколькими способами можно переставить буквы слова так, чтобы гласные остались на местах гласных,
+      а согласные — на местах согласных (все буквы считаются различными):</p>
+    <div class="formula"><i>N</i> = <i>Г</i>! · <i>С</i>!</div>
+    <p class="muted small">Г — число гласных, С — число согласных. Для слова ABBA: Г = 2, С = 2, <i>N</i> = 2!·2! = 4.</p>
+  </div>
+
+  <div class="card">
+    <h2>Расчёт</h2>
+    <label>Слово — гласные и согласные посчитаются сами
+      <input id="a-word" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" value="ABBA"></label>
+    <p id="a-word-info" class="muted small"></p>
+    <div class="inline-form">
+      <input id="a-v" type="text" inputmode="numeric" autocomplete="off" aria-label="Число гласных" placeholder="гласные">
+      <span class="op">!&nbsp;×</span>
+      <input id="a-c" type="text" inputmode="numeric" autocomplete="off" aria-label="Число согласных" placeholder="согласные">
+      <span class="op">!</span>
+      <button type="button" id="a-calc" data-sound="result" class="primary">=</button>
+    </div>
+    <div id="a-out" aria-live="polite"></div>
+    <p class="muted small">Гласные: a e i o u y и а е ё и о у ы э ю я. Знаки, цифры, ь и ъ не учитываются.
+      Числа — до 500.</p>
+  </div>
+
+  <nav class="pager">
+    <span></span>
+    <a href="index.html">На главную</a>
+    <a href="project2.html">Проект 2 →</a>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script>
+  (() => {
+    const VOWELS = new Set('aeiouyаеёиоуыэюя');
+    const SIGNS = new Set('ьъ');
+    const out = $('a-out');
+
+    function countLetters(word) {
+      const vowels = [];
+      const consonants = [];
+      for (const ch of word) {
+        const low = ch.toLowerCase();
+        if (!/\p{L}/u.test(ch) || SIGNS.has(low)) continue;
+        (VOWELS.has(low) ? vowels : consonants).push(ch);
+      }
+      return { vowels, consonants };
+    }
+
+    function factorial(n) {
+      let value = 1n;
+      for (let i = 2n; i <= BigInt(n); i++) value *= i;
+      return value;
+    }
+
+    /** Большое число с пробелами между разрядами. */
+    const digits = (n) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+    function readCount(id, name) {
+      const value = $(id).value.trim();
+      if (!/^\d+$/.test(value)) throw new Error(`${name}: введите целое неотрицательное число`);
+      if (Number(value) > 500) throw new Error(`${name}: не больше 500`);
+      return Number(value);
+    }
+
+    function calc() {
+      try {
+        const v = readCount('a-v', 'Гласные');
+        const c = readCount('a-c', 'Согласные');
+        const fv = factorial(v);
+        const fc = factorial(c);
+        const n = fv * fc;
+        const length = n.toString().length;
+        out.innerHTML = `<p class="big-result">${v}! · ${c}! = ${digits(fv)} · ${digits(fc)} = <b>${digits(n)}</b></p>
+          ${length > 15 ? `<p class="muted small">В числе ${length} цифр.</p>` : ''}`;
+      } catch (err) {
+        out.innerHTML = `<p class="error">${esc(err.message)}</p>`;
+      }
+    }
+
+    function fromWord() {
+      const { vowels, consonants } = countLetters($('a-word').value);
+      $('a-v').value = vowels.length;
+      $('a-c').value = consonants.length;
+      const list = (letters) => (letters.length ? ` (${esc(letters.join(', '))})` : '');
+      $('a-word-info').innerHTML = `Гласных: ${vowels.length}${list(vowels)}; согласных: ${consonants.length}${list(consonants)}.`;
+      calc();
+    }
+
+    $('a-word').addEventListener('input', fromWord);
+    for (const id of ['a-v', 'a-c']) {
+      $(id).addEventListener('input', () => {
+        $('a-word-info').textContent = '';
+        calc();
+      });
+    }
+    $('a-calc').addEventListener('click', calc);
+
+    fromWord();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>

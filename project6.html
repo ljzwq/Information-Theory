@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<meta name="description" content="Проект 6. Равновесие Нэша на примере дилеммы заключённого">
+<meta property="og:title" content="Проект 6 · Теория информации">
+<meta property="og:description" content="Равновесие Нэша · дилемма заключённого">
+<meta property="og:image" content="https://ljzwq.github.io/Information-Theory/img/siteimg-512.jpg">
+<title>Проект 6 · Теория информации</title>
+<link rel="icon" type="image/png" href="img/siteimg.png">
+<link rel="apple-touch-icon" href="img/siteimg.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark bg-p6">
+
+<main class="container">
+  <div class="card page-head">
+    <p class="crumbs"><a href="index.html">← На главную</a></p>
+    <h1>Проект 6. Равновесие Нэша</h1>
+    <p class="variant">Дилемма заключённого</p>
+  </div>
+
+  <div class="card">
+    <h2>Условие</h2>
+    <p>Двух подозреваемых, A и B, допрашивают по отдельности. Каждый может молчать или дать показания против
+      другого (предать). Срок каждого зависит от решений обоих:</p>
+    <table class="payoff" id="n-matrix">
+      <thead>
+        <tr><th></th><th>B молчит</th><th>B предаёт</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>A молчит</th><td data-cell="silent-silent">A: 6 мес.<br>B: 6 мес.</td><td data-cell="silent-betray">A: 10 лет<br>B: свобода</td></tr>
+        <tr><th>A предаёт</th><td data-cell="betray-silent">A: свобода<br>B: 10 лет</td><td data-cell="betray-betray">A: 2 года<br>B: 2 года<br>★</td></tr>
+      </tbody>
+    </table>
+    <p class="muted small"><b>Равновесие Нэша</b> — такой исход, при котором ни одному участнику не выгодно в одиночку
+      менять своё решение. Здесь это только «оба предают» (★), хотя «оба молчат» лучше для обоих.</p>
+  </div>
+
+  <div class="card">
+    <h2>Симуляция</h2>
+    <div class="btn-row center"><button type="button" id="n-run" data-sound="result" class="primary">Запустить симуляцию</button></div>
+    <div class="form-grid">
+      <label>Решение A
+        <select id="n-a"><option value="silent">Молчать</option><option value="betray">Предать</option></select></label>
+      <label>Решение B
+        <select id="n-b"><option value="silent">Молчать</option><option value="betray">Предать</option></select></label>
+    </div>
+    <div id="n-out" aria-live="polite"></div>
+  </div>
+
+  <nav class="pager">
+    <a href="project5.html">← Проект 5</a>
+    <a href="index.html">На главную</a>
+    <a href="task1.html">Задание 1 →</a>
+  </nav>
+</main>
+
+<footer class="footer">© 2026 Захарчук Е. Д. · Теория информации</footer>
+
+<script src="js/common.js"></script>
+<script>
+  (() => {
+    /** Сроки в годах: YEARS[решение A][решение B] = [срок A, срок B]. */
+    const YEARS = {
+      silent: { silent: [0.5, 0.5], betray: [10, 0] },
+      betray: { silent: [0, 10], betray: [2, 2] },
+    };
+    const VERB = { silent: 'молчит', betray: 'предаёт' };
+    const INFINITIVE = { silent: 'молчать', betray: 'предать' };
+    const other = (choice) => (choice === 'silent' ? 'betray' : 'silent');
+
+    function term(years) {
+      if (years === 0) return 'свобода';
+      if (years < 1) return `${years * 12} месяцев`;
+      return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`;
+    }
+
+    /** Выгодно ли игроку поменять решение, если другой своё не меняет. */
+    function check(name, current, alternative) {
+      if (alternative < current) {
+        return { wants: true, text: `${name} выгоднее изменить решение: было бы ${term(alternative)}, а сейчас ${term(current)}.` };
+      }
+      return { wants: false, text: `${name} менять решение невыгодно: было бы ${term(alternative)}, а сейчас ${term(current)}.` };
+    }
+
+    function evaluate() {
+      const a = $('n-a').value;
+      const b = $('n-b').value;
+      const [ya, yb] = YEARS[a][b];
+      const checkA = check('A', ya, YEARS[other(a)][b][0]);
+      const checkB = check('B', yb, YEARS[a][other(b)][1]);
+      const nash = !checkA.wants && !checkB.wants;
+
+      document.querySelectorAll('#n-matrix td').forEach((td) => td.classList.toggle('hit', td.dataset.cell === `${a}-${b}`));
+      $('n-out').innerHTML = `
+        <div class="verdict">
+          <div><b>Заключённый A</b>${VERB[a]} → ${term(ya)}<br><span class="small muted">${checkA.text}</span></div>
+          <div><b>Заключённый B</b>${VERB[b]} → ${term(yb)}<br><span class="small muted">${checkB.text}</span></div>
+        </div>
+        ${nash
+          ? '<p class="big-result center">Это равновесие Нэша: ни A, ни B не выгодно менять решение в одиночку.</p>'
+          : `<p class="error center"><b>Не равновесие:</b> ${[checkA, checkB].filter((c) => c.wants).length === 2
+              ? 'обоим выгодно изменить решение'
+              : `${checkA.wants ? 'A' : 'B'} выгоднее ${INFINITIVE[other(checkA.wants ? a : b)]}`}.</p>`}`;
+    }
+
+    $('n-run').addEventListener('click', () => {
+      $('n-a').value = Math.random() < 0.5 ? 'silent' : 'betray';
+      $('n-b').value = Math.random() < 0.5 ? 'silent' : 'betray';
+      evaluate();
+    });
+    $('n-a').addEventListener('change', evaluate);
+    $('n-b').addEventListener('change', evaluate);
+
+    evaluate();
+  })();
+</script>
+<script src="js/sounds.js"></script>
+</body>
+</html>
