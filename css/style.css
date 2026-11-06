@@ -48,12 +48,6 @@ body.bg-p5 { --head: #46505f; background-color: #d8d6d4; }
 .bg-p5::before { background-image: url(../img/bckgr6.jpg); }
 body.bg-p6 { --head: #ececec; background-color: #050505; }
 .bg-p6::before { background-image: url(../img/bckgr7.jpg); }
-body.bg-t1 { --head: #6d35a0; --link: #8a2f8f; background-color: #9fd0f0; }
-.bg-t1::before { background-image: url(../img/bckgr8.jpg); }
-body.bg-t2 { --head: #7a2f5e; background-color: #f0c9a0; }
-.bg-t2::before { background-image: url(../img/bckgr9.jpg); }
-body.bg-t3 { --head: #9fd3ff; --link: #cfe8ff; background-color: #2a2a30; }
-.bg-t3::before { background-image: url(../img/bckgr10.jpg); }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
